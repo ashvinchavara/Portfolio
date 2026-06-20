@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ashvin Johnson | Full-Stack AI & Cross-Platform Mobile Engineer</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Portfolio of Ashvin Johnson, a Cross-Platform Mobile (Flutter, Android Kotlin) and Full-Stack AI Engineer specializing in BLE Mesh systems, AI integrations, and high-performance applications.">
+  <meta name="keywords" content="Ashvin Johnson, Ashvin Chavara, Flutter Developer, Android Developer, BLE Mesh, Google Gemini, Node.js, MySQL, PostgreSQL, Portfolio">
+  <meta name="author" content="Ashvin Johnson">
+  
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Ashvin Johnson | Full-Stack AI & Cross-Platform Mobile Engineer">
+  <meta property="og:description" content="Portfolio of Ashvin Johnson, showcasing Mrivan AI, Presence Tracker BLE Mesh, and native Android applications.">
+  <meta property="og:type" content="website">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <script>
+    (function() {
+      var currentTheme = localStorage.getItem('theme');
+      if (!currentTheme) {
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        currentTheme = prefersDark ? 'dark' : 'light';
+      }
+      document.body.classList.add(currentTheme + '-theme');
+    })();
+  </script>
+
+  <!-- Background Particle Network Canvas -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Scroll-Linked Welcome Gateway -->
+  <div id="welcome-gateway">
+    <button class="theme-toggle-btn gateway-theme-toggle" aria-label="Toggle Theme"><i class="fas fa-moon"></i></button>
+    <div class="gateway-stars"></div>
+    <div class="gateway-grid"></div>
+    <div class="gateway-content">
+      <div class="gateway-brand">
+        <div class="brand-monogram">
+          <div class="ring outer-ring"></div>
+          <div class="ring mid-ring"></div>
+          <div class="ring inner-ring"></div>
+          <span class="monogram-text">AJ</span>
+        </div>
+        <h1 class="brand-name">ASHVIN JOHNSON</h1>
+        <p class="brand-tagline">CROSS-PLATFORM & FULL-STACK AI ENGINEER</p>
+      </div>
+      <div class="gateway-footer">
+        <div class="scroll-prompt">
+          <span class="mouse-icon">
+            <span class="scroll-wheel"></span>
+          </span>
+          <span class="scroll-text">SCROLL TO ENTER DATABASE</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gru Character peeking from bottom-left -->
+    <div id="gru-container">
+      <svg viewBox="0 0 200 250" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gun-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#10b981" />
+            <stop offset="100%" stop-color="#059669" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Hidden Anchors for JS Tracking -->
+        <circle id="gru-head-anchor" cx="80" cy="115" r="1" opacity="0"/>
+        <circle id="gru-arm-anchor" cx="130" cy="160" r="1" opacity="0"/>
+
+        <!-- Body/Coat -->
+        <path d="M 30 250 C 30 180, 50 145, 90 145 C 130 145, 150 175, 165 250 Z" fill="#1e293b" stroke="#0f172a" stroke-width="3" />
+        <!-- Scarf Wrapped Around Neck -->
+        <!-- Stripe patterns on neck wrap -->
+        <ellipse cx="90" cy="148" rx="35" ry="12" fill="#475569" stroke="#0f172a" stroke-width="2.5" />
+        <!-- Stripes -->
+        <path d="M 65 141 Q 90 152 115 141 M 73 145 Q 90 156 107 145 M 58 144 Q 90 158 122 144" stroke="#1e293b" stroke-width="4.5" fill="none" />
+        
+        <!-- Scarf Tail hanging down -->
+        <path d="M 65 155 L 65 220 C 65 225, 78 225, 78 220 L 78 155 Z" fill="#475569" stroke="#0f172a" stroke-width="2" />
+        <!-- Stripes on tail -->
+        <path d="M 65 168 H 78 M 65 180 H 78 M 65 192 H 78 M 65 204 H 78 M 65 216 H 78" stroke="#1e293b" stroke-width="4" />
+
+        <!-- Gun Arm Group (Shoulder at 130, 160) -->
+        <g id="gru-arm" class="idle-arm">
+          <!-- Arm sleeve -->
+          <path d="M 130 160 Q 120 120 105 100" stroke="#1e293b" stroke-width="14" stroke-linecap="round" fill="none" />
+          <path d="M 130 160 Q 120 120 105 100" stroke="#0f172a" stroke-width="16" stroke-linecap="round" fill="none" />
+          <path d="M 130 160 Q 120 120 105 100" stroke="#1e293b" stroke-width="11" stroke-linecap="round" fill="none" />
+          
+          <!-- Hand holding gun -->
+          <circle cx="105" cy="100" r="7" fill="#f5c2a2" stroke="#0f172a" stroke-width="1.5" />
+          
+          <!-- Futuristic Ray Gun (Freeze Ray) centered at hand (105, 100) -->
+          <g transform="translate(105, 100)">
+            <!-- Gun handle/trigger guard -->
+            <path d="M -2 0 L -8 15 L 2 15 Z" fill="#334155" stroke="#0f172a" stroke-width="1.5" />
+            <!-- Main Gun Body -->
+            <rect x="-10" y="-35" width="20" height="35" rx="4" fill="#475569" stroke="#0f172a" stroke-width="2" />
+            <!-- Green glowing tube -->
+            <rect x="-5" y="-25" width="10" height="15" fill="url(#gun-glow)" stroke="#0f172a" stroke-width="1" />
+            <!-- Wide side exhaust/turbine -->
+            <circle cx="10" cy="-18" r="8" fill="#334155" stroke="#0f172a" stroke-width="1.5" />
+            <line x1="10" y1="-26" x2="10" y2="-10" stroke="#0f172a" stroke-width="1" />
+            <line x1="2" y1="-18" x2="18" y2="-18" stroke="#0f172a" stroke-width="1" />
+            
+            <!-- Long Barrel -->
+            <rect x="-6" y="-75" width="12" height="40" fill="#64748b" stroke="#0f172a" stroke-width="2" />
+            <!-- Cone nozzle -->
+            <path d="M -12 -90 L 12 -90 L 8 -75 L -8 -75 Z" fill="#334155" stroke="#0f172a" stroke-width="2" />
+            <!-- Concentric cooling rings -->
+            <ellipse cx="0" cy="-48" rx="9" ry="2.5" fill="#334155" stroke="#0f172a" stroke-width="1.2" />
+            <ellipse cx="0" cy="-58" rx="8" ry="2.5" fill="#334155" stroke="#0f172a" stroke-width="1.2" />
+            <ellipse cx="0" cy="-68" rx="7" ry="2.5" fill="#334155" stroke="#0f172a" stroke-width="1.2" />
+            <!-- Scope / Antenna wire -->
+            <path d="M -8 -35 L -14 -60 L -6 -60" fill="none" stroke="#0f172a" stroke-width="1.2" />
+          </g>
+        </g>
+
+        <!-- Head Group -->
+        <g id="gru-head">
+          <!-- Bald pinkish skin head -->
+          <ellipse cx="80" cy="115" rx="28" ry="24" fill="#f5c2a2" stroke="#0f172a" stroke-width="2.5" />
+          
+          <!-- Ears -->
+          <circle cx="108" cy="118" r="5" fill="#f5c2a2" stroke="#0f172a" stroke-width="2" />
+          
+          <!-- Long Pointy Nose (pointing left-down) -->
+          <path d="M 58 111 L 22 121 L 58 126 Z" fill="#f5c2a2" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round" />
+          
+          <!-- Angry Mouth -->
+          <path d="M 55 131 Q 70 128 80 132" stroke="#0f172a" stroke-width="2" fill="none" stroke-linecap="round" />
+          
+          <!-- Left Eye Ball -->
+          <ellipse cx="58" cy="103" rx="7" ry="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" />
+          <!-- Right Eye Ball -->
+          <ellipse cx="78" cy="101" rx="7" ry="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" />
+
+          <!-- Left Pupil -->
+          <circle id="gru-pupil-left" cx="58" cy="103" r="2.2" fill="#1e293b" />
+          <!-- Right Pupil -->
+          <circle id="gru-pupil-right" cx="78" cy="101" r="2.2" fill="#1e293b" />
+
+          <!-- Slanted angry eyelids overlay (giving the iconic squinting look) -->
+          <path d="M 50 97 Q 58 103 66 102 M 70 99 Q 78 101 86 99" stroke="#0f172a" stroke-width="2" fill="none" />
+          <!-- Thick angry eyebrows -->
+          <path d="M 49 95 L 67 101" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+          <path d="M 69 101 L 87 95" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Scroll Spacer to trigger Welcome Animation -->
+  <div id="welcome-scroll-spacer"></div>
+
+  <!-- Main Dashboard Content -->
+  <div id="dashboard">
+    
+    <!-- Navigation Bar -->
+    <header class="main-header">
+      <div class="header-container">
+        <a href="#" class="logo" id="nav-logo">
+          <span class="logo-accent">&lt;</span>AJ<span class="logo-accent"> /&gt;</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#about" class="nav-item">About</a>
+          <a href="#projects" class="nav-item">Projects</a>
+          <a href="#simulations" class="nav-item">Simulators</a>
+          <a href="#skills" class="nav-item">Skills</a>
+          <a href="#contact" class="nav-item">Contact</a>
+        </nav>
+        <div class="nav-socials">
+          <a href="https://github.com/ashvinchavara" target="_blank" aria-label="GitHub" class="social-icon-link"><i class="fab fa-github"></i></a>
+          <a href="https://www.linkedin.com/in/1021-ashvin-johnson" target="_blank" aria-label="LinkedIn" class="social-icon-link"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://wa.me/919447250306" target="_blank" aria-label="WhatsApp" class="social-icon-link"><i class="fab fa-whatsapp"></i></a>
+          <a href="mailto:ashvinchavara@gmail.com" aria-label="Email" class="social-icon-link"><i class="far fa-envelope"></i></a>
+        </div>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme"><i class="fas fa-moon"></i></button>
+        <button class="mobile-nav-toggle" aria-label="Toggle navigation">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-nav-drawer">
+      <nav class="mobile-nav-links">
+        <a href="#about" class="mobile-nav-item">About</a>
+        <a href="#projects" class="mobile-nav-item">Projects</a>
+        <a href="#simulations" class="mobile-nav-item">Simulators</a>
+        <a href="#skills" class="mobile-nav-item">Skills</a>
+        <a href="#contact" class="mobile-nav-item">Contact</a>
+      </nav>
+      <div class="mobile-nav-footer">
+        <a href="https://github.com/ashvinchavara" target="_blank"><i class="fab fa-github"></i></a>
+        <a href="https://www.linkedin.com/in/1021-ashvin-johnson" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+        <a href="https://wa.me/919447250306" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        <a href="mailto:ashvinchavara@gmail.com"><i class="far fa-envelope"></i></a>
+      </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+      <div class="hero-container">
+        <div class="hero-content">
+          <div class="terminal-badge">
+            <i class="fas fa-terminal"></i>
+            <span>status: active_developer</span>
+          </div>
+          <h2 class="hero-title">
+            Developing <span class="text-gradient cyan-purple">Next-Gen</span> Mobile Apps & AI-Native Architectures
+          </h2>
+          <p class="hero-subtitle">
+            I'm Ashvin Johnson, a Cross-Platform & Native Mobile developer and Full-Stack engineer. I specialize in building BLE Mesh proximity networks, complex school management CRMs, and deeply integrated AI tutors.
+          </p>
+          <div class="hero-buttons">
+            <a href="#projects" class="btn btn-primary btn-glow">
+              <span>View Projects</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+            <a href="#simulations" class="btn btn-secondary">
+              <span>Try Live Simulators</span>
+            </a>
+          </div>
+        </div>
+        
+        <div class="hero-visual">
+          <div class="tech-globe-container">
+            <div class="globe-mesh"></div>
+            <div class="orbiting-nodes">
+              <div class="node node-flutter" title="Flutter">
+                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 1.1em; height: 1.1em; vertical-align: middle;">
+                  <path d="M14.314 0L2.3 12 6 15.7 21.684.012h-7.357L14.314 0zm.014 11.072l-6.471 6.457 6.47 6.47H21.7l-6.46-6.468 6.46-6.46h-7.371z"/>
+                </svg>
+              </div>
+              <div class="node node-android" title="Android"><i class="fab fa-android"></i></div>
+              <div class="node node-node" title="Node.js"><i class="fab fa-node-js"></i></div>
+              <div class="node node-ai" title="AI Gemini"><i class="fas fa-brain"></i></div>
+              <div class="node node-bluetooth" title="BLE Mesh"><i class="fab fa-bluetooth-b"></i></div>
+            </div>
+            <div class="globe-center">
+              <i class="fas fa-code"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About / Core Expertise Section -->
+    <section class="about-section" id="about">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title"><span class="title-number">01.</span> Core Expertise</h2>
+          <div class="section-line"></div>
+        </div>
+        
+        <div class="about-grid">
+          <div class="about-card glass-panel" data-reveal="bottom">
+            <div class="card-icon cyan-glow">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="width: 1.25em; height: 1.25em; vertical-align: middle;">
+                <path d="M14.314 0L2.3 12 6 15.7 21.684.012h-7.357L14.314 0zm.014 11.072l-6.471 6.457 6.47 6.47H21.7l-6.46-6.468 6.46-6.46h-7.371z"/>
+              </svg>
+            </div>
+            <h3 class="card-title">Cross-Platform (Flutter)</h3>
+            <p class="card-text">
+              Building feature-rich applications for Android, iOS, and Web. Experienced in state management, local database synchronization (Supabase, MySQL), and offline-first BLE synchronization.
+            </p>
+          </div>
+          
+          <div class="about-card glass-panel" data-reveal="bottom" style="transition-delay: 0.1s;">
+            <div class="card-icon green-glow">
+              <i class="fab fa-android"></i>
+            </div>
+            <h3 class="card-title">Native Android (Kotlin)</h3>
+            <p class="card-text">
+              Writing high-performance native modules, biometrics integration, foreground location tracking, Broadcast Receivers, WorkManager, and background BLE advertising and scanning.
+            </p>
+          </div>
+          
+          <div class="about-card glass-panel" data-reveal="bottom" style="transition-delay: 0.2s;">
+            <div class="card-icon purple-glow">
+              <i class="fas fa-brain"></i>
+            </div>
+            <h3 class="card-title">AI-Native Full-Stack</h3>
+            <p class="card-text">
+              Integrating LLM pipelines (Google Gemini, Groq, OpenRouter) with Express.js APIs. Specialized in context synchronization, agent memory persistence, and dynamic study note generators.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects Dashboard Section -->
+    <section class="projects-section" id="projects">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title"><span class="title-number">02.</span> Featured Projects</h2>
+          <div class="section-line"></div>
+        </div>
+        
+        <!-- Project 1: Mrivan AI -->
+        <div class="project-item glass-panel" data-reveal="left">
+          <div class="project-graphic-side">
+            <!-- Custom Project SVG Illustration -->
+            <svg class="project-svg" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#4facfe" />
+                  <stop offset="100%" stop-color="#00f2fe" />
+                </linearGradient>
+                <linearGradient id="db-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#7f00ff" />
+                  <stop offset="100%" stop-color="#e100ff" />
+                </linearGradient>
+                <filter id="glow-svg" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="8" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <!-- Grid background -->
+              <path d="M0 50 H400 M0 100 H400 M0 150 H400 M0 200 H400 M0 250 H400" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+              <path d="M50 0 V300 M100 0 V300 M150 0 V300 M200 0 V300 M250 0 V300 M300 0 V300 M350 0 V300" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+              
+              <!-- Core AI Chat bubble -->
+              <rect x="50" y="60" width="160" height="70" rx="12" fill="rgba(15, 23, 42, 0.6)" stroke="url(#gemini-grad)" stroke-width="1.5" />
+              <text x="65" y="90" fill="#e2e8f0" font-family="'Fira Code', monospace" font-size="12">Mr. Ivan AI</text>
+              <text x="65" y="110" fill="#94a3b8" font-family="'Outfit', sans-serif" font-size="10">Hello! I am your AI Tutor...</text>
+              
+              <!-- Gemini Sparkles -->
+              <path d="M250 80 L255 90 L265 92 L255 94 L250 104 L245 94 L235 92 L245 90 Z" fill="url(#gemini-grad)" filter="url(#glow-svg)"/>
+              <path d="M280 60 L282 65 L287 66 L282 67 L280 72 L278 67 L273 66 L278 65 Z" fill="#00f2fe"/>
+              
+              <!-- Database Server -->
+              <rect x="230" y="150" width="110" height="90" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="url(#db-grad)" stroke-width="1.5" />
+              <line x1="240" y1="170" x2="330" y2="170" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-dasharray="2 2"/>
+              <circle cx="250" cy="190" r="4" fill="#00ffcc" />
+              <text x="262" y="194" fill="#94a3b8" font-family="'Outfit', sans-serif" font-size="9">supabase_db</text>
+              <circle cx="250" cy="215" r="4" fill="#00ffcc" />
+              <text x="262" y="219" fill="#94a3b8" font-family="'Outfit', sans-serif" font-size="9">crm_tables</text>
+              
+              <!-- Sync connection lines -->
+              <path d="M130 130 C130 190, 230 190, 230 190" stroke="url(#gemini-grad)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+              <!-- Student App mockup side -->
+              <rect x="70" y="170" width="70" height="110" rx="8" fill="rgba(30, 41, 59, 0.8)" stroke="#4facfe" stroke-width="1" />
+              <circle cx="105" cy="180" r="3" fill="#334155" />
+              <rect x="80" y="195" width="50" height="8" rx="2" fill="rgba(255,255,255,0.1)" />
+              <rect x="80" y="210" width="40" height="6" rx="2" fill="rgba(255,255,255,0.06)" />
+              <rect x="80" y="222" width="50" height="40" rx="4" fill="rgba(0,242,254,0.1)" />
+              
+              <path d="M140 220 L230 195" stroke="#7f00ff" stroke-width="1" stroke-dasharray="3 3" fill="none"/>
+            </svg>
+          </div>
+          <div class="project-info-side">
+            <span class="project-tag">AI-Native CRM & Learning Platform</span>
+            <h3 class="project-title">Mrivan AI - School CRM & AI Tutor</h3>
+            <p class="project-desc">
+              A comprehensive school management and learning system. It incorporates an Express.js backend connecting to PostgreSQL (Supabase) and leverages Google Gemini for step-by-step empathetic pedagogical tutoring, complete with automatically synchronized chat history, homework verification, and CBT mock tests.
+            </p>
+            
+            <div class="project-tabs" id="project-tabs-mrivan">
+              <div class="tab-headers">
+                <button class="tab-btn active" data-tab="features">Key Features</button>
+                <button class="tab-btn" data-tab="architecture">Architecture</button>
+                <button class="tab-btn" data-tab="stack">Tech Stack</button>
+              </div>
+              <div class="tab-contents">
+                <div class="tab-pane active" id="mrivan-features">
+                  <ul>
+                    <li><strong>AI Tutor (Mr. Ivan AI)</strong>: Empathetic learning assistant that doesn't just give answers, but guides students step-by-step.</li>
+                    <li><strong>CRM Portal</strong>: School setup, classroom/section definition, homework assignment/submission, and student tracking.</li>
+                    <li><strong>Smart Content</strong>: Custom markdown study guide builder, automated quiz generator, and score evaluators.</li>
+                  </ul>
+                </div>
+                <div class="tab-pane" id="mrivan-architecture">
+                  <p>
+                    A client-server framework. The Flutter app (web/mobile) communicates with a custom Node.js/Express server hosted on Render. User profiles and metadata are synced dynamically from Supabase Auth to a public <code>profiles</code> table, securing CRM resources using Row Level Security (RLS).
+                  </p>
+                </div>
+                <div class="tab-pane" id="mrivan-stack">
+                  <div class="tech-grid">
+                    <span>Flutter</span>
+                    <span>Node.js</span>
+                    <span>Express.js</span>
+                    <span>Supabase (PostgreSQL)</span>
+                    <span>Gemini SDK</span>
+                    <span>Render</span>
+                    <span>Groq</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="project-links">
+              <a href="https://github.com/ashvinchavara" target="_blank" class="project-link-btn"><i class="fab fa-github"></i> Repository</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Project 2: Presence Tracker -->
+        <div class="project-item glass-panel" data-reveal="right">
+          <div class="project-graphic-side">
+            <svg class="project-svg" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="mesh-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00f2fe" />
+                  <stop offset="100%" stop-color="#4facfe" />
+                </linearGradient>
+                <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(0, 242, 254, 0.15)" />
+                  <stop offset="100%" stop-color="rgba(0, 242, 254, 0)" />
+                </radialGradient>
+              </defs>
+              
+              <!-- Mesh grid -->
+              <circle cx="200" cy="150" r="120" stroke="rgba(0, 242, 254, 0.05)" stroke-width="1" />
+              <circle cx="200" cy="150" r="80" stroke="rgba(0, 242, 254, 0.08)" stroke-width="1" stroke-dasharray="3 3"/>
+              <circle cx="200" cy="150" r="40" stroke="rgba(0, 242, 254, 0.1)" stroke-width="1" />
+              
+              <!-- Radar sweep gradient -->
+              <circle cx="200" cy="150" r="120" fill="url(#radar-glow)" />
+              
+              <!-- Teacher Node (Root) -->
+              <circle cx="200" cy="150" r="18" fill="rgba(15, 23, 42, 0.9)" stroke="#00f2fe" stroke-width="2" />
+              <path d="M194 150 H206 M200 144 V156" stroke="#00f2fe" stroke-width="1.5"/>
+              <text x="180" y="125" fill="#e2e8f0" font-family="'Outfit', sans-serif" font-weight="600" font-size="10">Teacher (Root)</text>
+              
+              <!-- Student Nodes (Leafs) -->
+              <!-- Node 1 -->
+              <line x1="200" y1="150" x2="120" y2="90" stroke="rgba(0, 242, 254, 0.4)" stroke-width="1.5" />
+              <circle cx="120" cy="90" r="10" fill="#1e293b" stroke="#7f00ff" stroke-width="1.5" />
+              <circle cx="120" cy="90" r="4" fill="#7f00ff" />
+              <text x="80" y="85" fill="#94a3b8" font-family="'Outfit', sans-serif" font-size="8">Student A</text>
+              
+              <!-- Node 2 -->
+              <line x1="200" y1="150" x2="280" y2="100" stroke="rgba(0, 242, 254, 0.4)" stroke-width="1.5" />
+              <circle cx="280" cy="100" r="10" fill="#1e293b" stroke="#7f00ff" stroke-width="1.5" />
+              <circle cx="280" cy="100" r="4" fill="#7f00ff" />
+              <text x="290" y="98" fill="#94a3b8" font-family="'Outfit', sans-serif" font-size="8">Student B</text>
+              
+              <!-- Node 3 -->
+              <line x1="200" y1="150" x2="220" y2="240" stroke="rgba(0, 242, 254, 0.4)" stroke-width="1.5" />
+              <circle cx="220" cy="240" r="10" fill="#1e293b" stroke="#7f00ff" stroke-width="1.5" />
+              <circle cx="220" cy="240" r="4" fill="#7f00ff" />
+              <text x="215" y="260" fill="#94a3b8" font-family="'Outfit', sans-serif" font-size="8">Student C</text>
+              
+              <!-- Inter-node mesh links -->
+              <line x1="120" y1="90" x2="280" y2="100" stroke="rgba(127, 0, 255, 0.2)" stroke-width="1" stroke-dasharray="2 2" />
+              <line x1="280" y1="100" x2="220" y2="240" stroke="rgba(127, 0, 255, 0.2)" stroke-width="1" stroke-dasharray="2 2" />
+            </svg>
+          </div>
+          <div class="project-info-side">
+            <span class="project-tag">BLE Mesh & Scheduler Infrastructure</span>
+            <h3 class="project-title">Presence Tracker - BLE Mesh Proximity Attendance</h3>
+            <p class="project-desc">
+              A modern attendance and scheduling portal. Designed around an infinite department hierarchy (College -> Course -> Year -> Class) and a 3NF normalized MySQL database backend. The attendance mechanism uses Bluetooth Low Energy (BLE) Mesh network topologies, using the teacher device as the root and student devices as leaves.
+            </p>
+            
+            <div class="project-tabs" id="project-tabs-presence">
+              <div class="tab-headers">
+                <button class="tab-btn active" data-tab="features">Key Features</button>
+                <button class="tab-btn" data-tab="mesh">Mesh Protocol</button>
+                <button class="tab-btn" data-tab="stack">Tech Stack</button>
+              </div>
+              <div class="tab-contents">
+                <div class="tab-pane active" id="presence-features">
+                  <ul>
+                    <li><strong>Infinite Hierarchy Model</strong>: Department and layout modeling that dynamically links classes, courses, and timetables.</li>
+                    <li><strong>Proximity Presence</strong>: Secure verification of attendance using BLE mesh protocols without requiring internet connectivity for the client.</li>
+                    <li><strong>Normalized Timetable</strong>: 3NF structured database schemas that map schedules, recurring classes, and temporary teacher swaps.</li>
+                  </ul>
+                </div>
+                <div class="tab-pane" id="presence-mesh">
+                  <p>
+                    Uses a customized advertising payload where teacher devices act as roots, sending synchronized session keys. Leaf nodes scan, verify, sign with device-bound credentials, and propagate verification payloads back through the BLE mesh network to establish a tamper-proof attendance grid.
+                  </p>
+                </div>
+                <div class="tab-pane" id="presence-stack">
+                  <div class="tech-grid">
+                    <span>Flutter</span>
+                    <span>Node.js</span>
+                    <span>Express.js</span>
+                    <span>MySQL (3NF)</span>
+                    <span>BLE Mesh API</span>
+                    <span>Vanilla HTML/CSS/JS (Admin Dashboard)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="project-links">
+              <a href="https://github.com/ashvinchavara" target="_blank" class="project-link-btn"><i class="fab fa-github"></i> Repository</a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Project 3: Adtendo -->
+        <div class="project-item glass-panel" data-reveal="left">
+          <div class="project-graphic-side">
+            <svg class="project-svg" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="phone-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#1e293b" />
+                  <stop offset="100%" stop-color="#0f172a" />
+                </linearGradient>
+                <linearGradient id="glow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00f2fe" />
+                  <stop offset="100%" stop-color="#7f00ff" />
+                </linearGradient>
+              </defs>
+              
+              <!-- Screen Grid Background -->
+              <rect x="130" y="30" width="140" height="240" rx="20" fill="url(#phone-grad)" stroke="#334155" stroke-width="3" />
+              <!-- Screen Notch -->
+              <rect x="180" y="30" width="40" height="12" rx="6" fill="#334155" />
+              
+              <!-- Biometric Target scanner -->
+              <circle cx="200" cy="120" r="32" stroke="url(#glow-grad)" stroke-width="1.5" stroke-dasharray="4 4" />
+              <!-- Fingerprint SVG representation -->
+              <path d="M190 110 C193 105, 207 105, 210 110" stroke="#00f2fe" stroke-width="2" stroke-linecap="round"/>
+              <path d="M185 118 C190 110, 210 110, 215 118" stroke="#00f2fe" stroke-width="2" stroke-linecap="round"/>
+              <path d="M182 126 C188 116, 212 116, 218 126" stroke="#00f2fe" stroke-width="2" stroke-linecap="round"/>
+              <path d="M185 134 C195 125, 205 125, 215 134" stroke="#00f2fe" stroke-width="2" stroke-linecap="round"/>
+              <path d="M192 140 C196 136, 204 136, 208 140" stroke="#00f2fe" stroke-width="2" stroke-linecap="round"/>
+              
+              <!-- Home Screen Widget mockup next to it -->
+              <rect x="30" y="60" width="80" height="70" rx="8" fill="rgba(15, 23, 42, 0.8)" stroke="#7f00ff" stroke-width="1.5" />
+              <rect x="40" y="70" width="40" height="8" rx="2" fill="#7f00ff" />
+              <rect x="40" y="85" width="60" height="5" rx="1.5" fill="rgba(255,255,255,0.1)" />
+              <rect x="40" y="95" width="50" height="5" rx="1.5" fill="rgba(255,255,255,0.1)" />
+              <rect x="40" y="108" width="20" height="12" rx="3" fill="#00f2fe" />
+              <circle cx="85" cy="114" r="6" fill="#00ffcc" />
+              
+              <!-- Location / BLE Signal waves -->
+              <path d="M290 80 A 10 10 0 0 1 310 90" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" />
+              <path d="M295 70 A 20 20 0 0 1 325 90" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" />
+              <path d="M300 60 A 30 30 0 0 1 340 90" stroke="#00f2fe" stroke-width="2" stroke-linecap="round" />
+              
+              <circle cx="280" cy="100" r="4" fill="#00f2fe" />
+            </svg>
+          </div>
+          <div class="project-info-side">
+            <span class="project-tag">Native Android Client Utility</span>
+            <h3 class="project-title">Adtendo - Android Proximity Attendance Client</h3>
+            <p class="project-desc">
+              The native Android application supporting the Adtendo presence ecosystem. Implements dedicated user flows for Students, Teachers, and Heads of Departments, reinforced by secure device biometrics, foreground location matching, background BLE scanning/advertising mechanisms, and customized home screen widgets.
+            </p>
+            
+            <div class="project-tabs" id="project-tabs-adtendo">
+              <div class="tab-headers">
+                <button class="tab-btn active" data-tab="features">Key Features</button>
+                <button class="tab-btn" data-tab="services">Native Services</button>
+                <button class="tab-btn" data-tab="stack">Tech Stack</button>
+              </div>
+              <div class="tab-contents">
+                <div class="tab-pane active" id="adtendo-features">
+                  <ul>
+                    <li><strong>Biometric Cryptography</strong>: Integrates biometric authentication utilizing custom helper classes to decrypt server-provided user keys.</li>
+                    <li><strong>Home Screen Widget</strong>: Custom app widget updates that display real-time attendance stats directly on the device home screen.</li>
+                    <li><strong>Role-Based Navigation</strong>: Dynamically loaded dashboards mapping distinct options for students, teachers, and admins.</li>
+                  </ul>
+                </div>
+                <div class="tab-pane" id="adtendo-services">
+                  <p>
+                    Leverages background services to handle location updates, Bluetooth permissions, network connectivity tracking, and boot completions. Restarts services automatically upon device reboot using Broadcast Receivers to maintain proximity awareness.
+                  </p>
+                </div>
+                <div class="tab-pane" id="adtendo-stack">
+                  <div class="tech-grid">
+                    <span>Kotlin</span>
+                    <span>Android SDK</span>
+                    <span>Android WorkManager</span>
+                    <span>Broadcast Receivers</span>
+                    <span>BLE Services</span>
+                    <span>Biometric API</span>
+                    <span>SQLite / Room</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="project-links">
+              <a href="https://github.com/ashvinchavara" target="_blank" class="project-link-btn"><i class="fab fa-github"></i> Repository</a>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+
+    <!-- Interactive Simulators Section -->
+    <section class="simulations-section" id="simulations">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title"><span class="title-number">03.</span> Interactive Playgrounds</h2>
+          <div class="section-line"></div>
+        </div>
+        
+        <p class="simulations-intro">
+          Interact with simulated versions of key features from my primary projects to see their underlying logic in action.
+        </p>
+
+        <div class="simulators-container">
+          
+          <!-- Simulator 1: BLE Mesh Attendance Simulator -->
+          <div class="simulator-card glass-panel" id="ble-simulator-card">
+            <div class="simulator-header">
+              <div class="sim-title-group">
+                <i class="fab fa-bluetooth-b sim-icon-accent"></i>
+                <h3>BLE Mesh Attendance Simulator</h3>
+              </div>
+              <span class="sim-badge">PresenceTracker Concept</span>
+            </div>
+            <p class="sim-description">
+              Simulate BLE node scanning and connection establishment. Watch the proximity verification handshake between the teacher (Root) and students (Leaves) in real-time.
+            </p>
+            
+            <div class="sim-display-area">
+              <div class="mesh-canvas-container">
+                <div class="mesh-radar"></div>
+                
+                <!-- Root Teacher Node -->
+                <div class="mesh-node root-node" id="sim-root-node" style="top: 50%; left: 50%;">
+                  <span class="node-label">Teacher (Root)</span>
+                  <i class="fas fa-tower-broadcast"></i>
+                </div>
+                
+                <!-- Leaf Student Nodes -->
+                <div class="mesh-node leaf-node" id="sim-leaf-1" style="top: 20%; left: 25%;">
+                  <span class="node-label">Student A</span>
+                  <i class="fas fa-mobile-screen"></i>
+                </div>
+                <div class="mesh-node leaf-node" id="sim-leaf-2" style="top: 30%; left: 75%;">
+                  <span class="node-label">Student B</span>
+                  <i class="fas fa-mobile-screen"></i>
+                </div>
+                <div class="mesh-node leaf-node" id="sim-leaf-3" style="top: 80%; left: 35%;">
+                  <span class="node-label">Student C</span>
+                  <i class="fas fa-mobile-screen"></i>
+                </div>
+                
+                <svg class="mesh-connections-svg">
+                  <line id="line-leaf-1" x1="0" y1="0" x2="0" y2="0" class="mesh-line" />
+                  <line id="line-leaf-2" x1="0" y1="0" x2="0" y2="0" class="mesh-line" />
+                  <line id="line-leaf-3" x1="0" y1="0" x2="0" y2="0" class="mesh-line" />
+                </svg>
+              </div>
+            </div>
+            
+            <div class="sim-controls">
+              <button class="btn btn-primary" id="btn-start-mesh-sim">
+                <i class="fas fa-play"></i> Start BLE Scanning
+              </button>
+              <button class="btn btn-secondary" id="btn-reset-mesh-sim" disabled>
+                <i class="fas fa-rotate-left"></i> Reset
+              </button>
+            </div>
+            <div class="sim-console" id="mesh-sim-console">
+              <span class="console-line text-muted">[System] Ready to initialize mesh simulation. Click Start...</span>
+            </div>
+          </div>
+          
+          <!-- Simulator 2: Mr. Ivan AI Tutor Chat Simulator -->
+          <div class="simulator-card glass-panel" id="ai-simulator-card">
+            <div class="simulator-header">
+              <div class="sim-title-group">
+                <i class="fas fa-brain sim-icon-accent"></i>
+                <h3>Mr. Ivan AI - Tutor Simulator</h3>
+              </div>
+              <span class="sim-badge">Mrivan AI Concept</span>
+            </div>
+            <p class="sim-description">
+              Try a mini version of the AI Tutor chat. Ask Mr. Ivan pedagogical questions and experience the conversational, step-by-step guidance system.
+            </p>
+            
+            <div class="sim-display-area chat-display-area">
+              <div class="chat-messages" id="tutor-chat-messages">
+                <div class="chat-bubble ai-bubble">
+                  <div class="bubble-sender">Mr. Ivan AI</div>
+                  <div class="bubble-text">Hello! I am Mr. Ivan, your interactive pedagogical tutor. I am here to help you understand topics step-by-step. Select a prompt below or type your own to start learning!</div>
+                </div>
+              </div>
+              
+              <div class="prompt-chips">
+                <button class="chip-btn" data-prompt="Explain 3NF Normalization simply.">How does 3NF database normalization work?</button>
+                <button class="chip-btn" data-prompt="How does a BLE Mesh network transmit data?">Explain BLE Mesh data transmission</button>
+                <button class="chip-btn" data-prompt="What is Biometric Cryptography?">What is Biometric Cryptography?</button>
+              </div>
+            </div>
+            
+            <div class="sim-chat-input-row">
+              <input type="text" id="chat-input" placeholder="Type a concept or question (e.g. Kotlin Coroutines)..." class="glass-input">
+              <button class="btn btn-primary" id="btn-send-chat"><i class="fas fa-paper-plane"></i></button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills Space Section -->
+    <section class="skills-section" id="skills">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title"><span class="title-number">04.</span> Skills & Tech Inventory</h2>
+          <div class="section-line"></div>
+        </div>
+        
+        <div class="skills-wrapper">
+          <div class="skills-terminal glass-panel">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="terminal-title">skills_compilation.sh</div>
+              <div class="terminal-size-indicator">Fira Code</div>
+            </div>
+            
+            <div class="terminal-body">
+              <div class="terminal-output">
+                <span class="term-prompt">$</span> <span class="term-command">cat expertise.json</span>
+                <pre class="term-code">{
+  <span class="json-key">"mobile"</span>: {
+    <span class="json-key">"cross_platform"</span>: [<span class="json-val">"Flutter"</span>, <span class="json-val">"Dart"</span>, <span class="json-val">"State Management"</span>],
+    <span class="json-key">"native"</span>: [<span class="json-val">"Android SDK"</span>, <span class="json-val">"Kotlin"</span>, <span class="json-val">"Jetpack Compose"</span>, <span class="json-val">"Services"</span>]
+  },
+  <span class="json-key">"backend"</span>: {
+    <span class="json-key">"frameworks"</span>: [<span class="json-val">"Node.js"</span>, <span class="json-val">"Express.js"</span>],
+    <span class="json-key">"databases"</span>: [<span class="json-val">"MySQL (3NF)"</span>, <span class="json-val">"PostgreSQL (Supabase)"</span>],
+    <span class="json-key">"deployment"</span>: [<span class="json-val">"Render"</span>, <span class="json-val">"REST APIs"</span>]
+  },
+  <span class="json-key">"hardware_and_security"</span>: {
+    <span class="json-key">"networks"</span>: [<span class="json-val">"Bluetooth Low Energy"</span>, <span class="json-val">"BLE Mesh Protocol"</span>],
+    <span class="json-key">"cryptography"</span>: [<span class="json-val">"Biometrics Crypto"</span>, <span class="json-val">"Row Level Security"</span>]
+  },
+  <span class="json-key">"artificial_intelligence"</span>: {
+    <span class="json-key">"sdk_integrations"</span>: [<span class="json-val">"Google Gemini API"</span>, <span class="json-val">"Groq"</span>, <span class="json-val">"OpenRouter"</span>],
+    <span class="json-key">"capabilities"</span>: [<span class="json-val">"AI Agent Memory"</span>, <span class="json-val">"Pedagogical Prompting"</span>]
+  }
+}</pre>
+                <span class="term-prompt">$</span> <span class="term-command">./load_experience.sh --level=advanced</span>
+                <p class="term-text-success">Loading competencies... SUCCESS [100%]</p>
+                <span class="term-prompt">$</span> <span class="pulse-cursor">_</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section" id="contact">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title"><span class="title-number">05.</span> Get In Touch</h2>
+          <div class="section-line"></div>
+        </div>
+        
+        <div class="contact-card glass-panel" data-reveal="bottom">
+          <div class="contact-glow-bg"></div>
+          <h3 class="contact-heading">Let's Build Something Together</h3>
+          <p class="contact-subheading">
+            Whether you want to discuss cross-platform mobile apps, AI tutor agents, BLE proximity architecture, or just network—my inbox is always open.
+          </p>
+          
+          <div class="contact-details">
+            <a href="mailto:ashvinchavara@gmail.com" class="contact-item-link">
+              <div class="contact-icon"><i class="far fa-envelope"></i></div>
+              <span>ashvinchavara@gmail.com</span>
+            </a>
+            <a href="https://wa.me/919447250306" target="_blank" class="contact-item-link">
+              <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+              <span>+91 9447250306 (WhatsApp)</span>
+            </a>
+            <a href="https://www.linkedin.com/in/1021-ashvin-johnson" target="_blank" class="contact-item-link">
+              <div class="contact-icon"><i class="fab fa-linkedin-in"></i></div>
+              <span>linkedin.com/in/1021-ashvin-johnson</span>
+            </a>
+            <a href="https://github.com/ashvinchavara" target="_blank" class="contact-item-link">
+              <div class="contact-icon"><i class="fab fa-github"></i></div>
+              <span>github.com/ashvinchavara</span>
+            </a>
+          </div>
+          
+          <div class="contact-cta">
+            <a href="mailto:ashvinchavara@gmail.com" class="btn btn-primary btn-glow">
+              <span>Send Secure Message</span>
+              <i class="far fa-paper-plane"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+      <div class="footer-container">
+        <p>&copy; 2026 Ashvin Johnson. All Rights Reserved.</p>
+        <p class="footer-sub">Designed with Vanilla HTML/CSS/JS & Google Gemini. Hosted locally via Vite.</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Script Files -->
+  <script src="main.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "ashvin-johnson-portfolio",
+  "version": "1.0.0",
+  "description": "Developer Portfolio for Ashvin Johnson",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "Ashvin Johnson",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}
