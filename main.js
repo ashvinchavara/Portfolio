@@ -422,8 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
               gunLight.position.set(0, 0.01, 0.27);
               gunGroup.add(gunLight);
 
-              gunGroup.position.set(0, 0.02, 0.02);
-              gunGroup.rotation.set(0, 0, 0);
+              gunGroup.position.set(0, 0.08, 0.02);
+              gunGroup.rotation.set(Math.PI / 2, 0, 0);
 
               rightHand.add(gunGroup);
             }
@@ -541,6 +541,14 @@ document.addEventListener('DOMContentLoaded', () => {
               targetArmQuat.setFromEuler(eulerArm);
 
               rightArm.quaternion.slerp(targetArmQuat, trackingWeight);
+
+              // Straighten elbow (RightForeArm) and wrist (RightHand) to make gun pointing direct
+              if (rightForeArm) {
+                rightForeArm.quaternion.slerp(new THREE.Quaternion(), trackingWeight);
+              }
+              if (rightHand) {
+                rightHand.quaternion.slerp(new THREE.Quaternion(), trackingWeight);
+              }
 
               // 3. Body rotation (turn back)
               const angleToTarget = Math.atan2(target3D.x - model.position.x, target3D.z - model.position.z);
