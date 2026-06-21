@@ -299,13 +299,38 @@ document.addEventListener('DOMContentLoaded', () => {
       let mouseX = 0;
       let mouseY = 0;
       let isTracking = false;
-      let trackingWeight = 0;
+      let headTrackingWeight = 0;
+      let armTrackingWeight = 0;
       let mouseMoveTimeout = null;
       let animationFrameId = null;
 
       const defaultArmDir = new THREE.Vector3();
       const defaultHeadDir = new THREE.Vector3();
       let gunLight = null;
+
+      // Robust bone search function to handle any naming prefix (e.g. mixamorig:RightHand, Right_Hand, etc.)
+      function findBone(root, keyword) {
+        const kw = keyword.toLowerCase();
+        let found = null;
+        
+        root.traverse((node) => {
+          if (found) return;
+          const name = node.name ? node.name.toLowerCase() : '';
+          
+          if (name.includes(kw)) {
+            // Apply exclusion checks to avoid incorrect bone mappings
+            if (kw === 'righthand' && name.includes('forearm')) return;
+            if (kw === 'lefthand' && name.includes('forearm')) return;
+            if (kw === 'rightarm' && (name.includes('forearm') || name.includes('shoulder'))) return;
+            if (kw === 'leftarm' && (name.includes('forearm') || name.includes('shoulder'))) return;
+            if (kw === 'head' && (name.includes('front') || name.includes('end') || name.includes('top'))) return;
+            
+            found = node;
+          }
+        });
+        
+        return found;
+      }
 
       try {
         const width = container.clientWidth || 280;
@@ -367,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // FBX is in centimeters, scale down to match meters (approx 0.0065 world size)
             model.scale.set(0.0065, 0.0065, 0.0065);
-            model.position.set(0, -0.65, 0);
+            model.position.set(0, -0.48, 0); // Moved character slightly up to peek better
             model.rotation.y = 0.4; 
 
             model.traverse((node) => {
@@ -387,12 +412,13 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             });
 
-            head = model.getObjectByName('Head');
-            rightArm = model.getObjectByName('RightArm');
-            rightForeArm = model.getObjectByName('RightForeArm');
-            rightHand = model.getObjectByName('RightHand');
-            leftArm = model.getObjectByName('LeftArm');
-            headfront = model.getObjectByName('headfront');
+            // Find bones robustly using substring keyword match helper
+            head = findBone(model, 'Head');
+            rightArm = findBone(model, 'RightArm');
+            rightForeArm = findBone(model, 'RightForeArm');
+            rightHand = findBone(model, 'RightHand');
+            leftArm = findBone(model, 'LeftArm');
+            headfront = findBone(model, 'headfront');
 
             if (rightHand) {
               const gunGroup = new THREE.Group();
@@ -511,24 +537,30 @@ document.addEventListener('DOMContentLoaded', () => {
           if (model && !mixer) {
             const time = clock.getElapsedTime();
             const spine = model.getObjectByName('Spine01') || model.getObjectByName('Spine');
-            if (spine && trackingWeight < 0.99) {
-              spine.rotation.x = Math.sin(time * 1.8) * 0.015 * (1 - trackingWeight);
+            if (spine && armTrackingWeight < 0.99) {
+              spine.rotation.x = Math.sin(time * 1.8) * 0.015 * (1 - armTrackingWeight);
             }
-            if (leftArm && trackingWeight < 0.99) {
-              leftArm.rotation.z = (Math.sin(time * 1.8) * 0.02 - 0.2) * (1 - trackingWeight);
+            if (leftArm && armTrackingWeight < 0.99) {
+              leftArm.rotation.z = (Math.sin(time * 1.8) * 0.02 - 0.2) * (1 - armTrackingWeight);
             }
-            if (rightArm && trackingWeight < 0.05) {
-              rightArm.rotation.z = (Math.sin(time * 1.8 + Math.PI) * 0.01 - 0.2) * (1 - trackingWeight);
+            if (rightArm && armTrackingWeight < 0.05) {
+              rightArm.rotation.z = (Math.sin(time * 1.8 + Math.PI) * 0.01 - 0.2) * (1 - armTrackingWeight);
             }
           }
 
+          // Head tracking weight always approaches 1.0 once model is loaded
+          if (model && head) {
+            headTrackingWeight = THREE.MathUtils.lerp(headTrackingWeight, 1.0, 0.05);
+          }
+
+          // Arm tracking weight depends on mouse movement (raising gun only when moving)
           if (isTracking && model && head && rightArm) {
-            trackingWeight = THREE.MathUtils.lerp(trackingWeight, 1.0, 0.08);
+            armTrackingWeight = THREE.MathUtils.lerp(armTrackingWeight, 1.0, 0.08);
           } else {
-            trackingWeight = THREE.MathUtils.lerp(trackingWeight, 0.0, 0.04);
+            armTrackingWeight = THREE.MathUtils.lerp(armTrackingWeight, 0.0, 0.04);
           }
 
-          if (model && head && rightArm && trackingWeight > 0.005) {
+          if (model && head) {
             const mouse3D = new THREE.Vector3(mouseX, mouseY, 0.5);
             mouse3D.unproject(camera);
             const dir = mouse3D.sub(camera.position).normalize();
@@ -538,64 +570,71 @@ document.addEventListener('DOMContentLoaded', () => {
               const dist = -camera.position.z / dir.z;
               const target3D = camera.position.clone().add(dir.multiplyScalar(dist));
 
-              // 1. Head tracking
-              const headWorldPos = new THREE.Vector3();
-              head.getWorldPosition(headWorldPos);
-              const headToTarget = target3D.clone().sub(headWorldPos).normalize();
-              
-              const parentHeadWorldQuat = new THREE.Quaternion();
-              head.parent.getWorldQuaternion(parentHeadWorldQuat);
-              const localHeadDir = headToTarget.clone().applyQuaternion(parentHeadWorldQuat.invert());
+              // 1. Head tracking (always active, keeping eyes on cursor)
+              if (head && headTrackingWeight > 0.005) {
+                const headWorldPos = new THREE.Vector3();
+                head.getWorldPosition(headWorldPos);
+                const headToTarget = target3D.clone().sub(headWorldPos).normalize();
+                
+                const parentHeadWorldQuat = new THREE.Quaternion();
+                head.parent.getWorldQuaternion(parentHeadWorldQuat);
+                const localHeadDir = headToTarget.clone().applyQuaternion(parentHeadWorldQuat.invert());
 
-              const targetHeadQuat = new THREE.Quaternion().setFromUnitVectors(defaultHeadDir, localHeadDir);
-              
-              const eulerHead = new THREE.Euler().setFromQuaternion(targetHeadQuat, 'YXZ');
-              eulerHead.x = THREE.MathUtils.clamp(eulerHead.x, -0.4, 0.4);
-              eulerHead.y = THREE.MathUtils.clamp(eulerHead.y, -0.6, 0.6);
-              eulerHead.z = 0;
-              targetHeadQuat.setFromEuler(eulerHead);
+                const targetHeadQuat = new THREE.Quaternion().setFromUnitVectors(defaultHeadDir, localHeadDir);
+                
+                const eulerHead = new THREE.Euler().setFromQuaternion(targetHeadQuat, 'YXZ');
+                eulerHead.x = THREE.MathUtils.clamp(eulerHead.x, -0.4, 0.4);
+                eulerHead.y = THREE.MathUtils.clamp(eulerHead.y, -0.6, 0.6);
+                eulerHead.z = 0;
+                targetHeadQuat.setFromEuler(eulerHead);
 
-              head.quaternion.slerp(targetHeadQuat, trackingWeight);
-
-              // 2. Right Arm tracking (pointing gun)
-              const armWorldPos = new THREE.Vector3();
-              rightArm.getWorldPosition(armWorldPos);
-              const armToTarget = target3D.clone().sub(armWorldPos).normalize();
-
-              const parentArmWorldQuat = new THREE.Quaternion();
-              rightArm.parent.getWorldQuaternion(parentArmWorldQuat);
-              const localArmDir = armToTarget.clone().applyQuaternion(parentArmWorldQuat.invert());
-
-              const targetArmQuat = new THREE.Quaternion().setFromUnitVectors(defaultArmDir, localArmDir);
-              
-              const eulerArm = new THREE.Euler().setFromQuaternion(targetArmQuat, 'YXZ');
-              eulerArm.x = THREE.MathUtils.clamp(eulerArm.x, -1.2, 0.8);
-              eulerArm.y = THREE.MathUtils.clamp(eulerArm.y, -1.0, 1.0);
-              eulerArm.z = THREE.MathUtils.clamp(eulerArm.z, -0.8, 0.8);
-              targetArmQuat.setFromEuler(eulerArm);
-
-              rightArm.quaternion.slerp(targetArmQuat, trackingWeight);
-
-              // Straighten elbow (RightForeArm) and wrist (RightHand) to make gun pointing direct
-              if (rightForeArm) {
-                rightForeArm.quaternion.slerp(new THREE.Quaternion(), trackingWeight);
-              }
-              if (rightHand) {
-                rightHand.quaternion.slerp(new THREE.Quaternion(), trackingWeight);
+                head.quaternion.slerp(targetHeadQuat, headTrackingWeight);
               }
 
-              // 3. Body rotation (turn back)
-              const angleToTarget = Math.atan2(target3D.x - model.position.x, target3D.z - model.position.z);
-              const targetModelY = THREE.MathUtils.clamp(angleToTarget, -0.2, 0.8);
-              model.rotation.y = THREE.MathUtils.lerp(0.4, targetModelY, trackingWeight);
+              // 2. Right Arm tracking (only when mouse moving)
+              if (rightArm && armTrackingWeight > 0.005) {
+                const armWorldPos = new THREE.Vector3();
+                rightArm.getWorldPosition(armWorldPos);
+                const armToTarget = target3D.clone().sub(armWorldPos).normalize();
 
-              if (gunLight) {
-                gunLight.intensity = THREE.MathUtils.lerp(1.5, 4.0, trackingWeight);
+                const parentArmWorldQuat = new THREE.Quaternion();
+                rightArm.parent.getWorldQuaternion(parentArmWorldQuat);
+                const localArmDir = armToTarget.clone().applyQuaternion(parentArmWorldQuat.invert());
+
+                const targetArmQuat = new THREE.Quaternion().setFromUnitVectors(defaultArmDir, localArmDir);
+                
+                const eulerArm = new THREE.Euler().setFromQuaternion(targetArmQuat, 'YXZ');
+                eulerArm.x = THREE.MathUtils.clamp(eulerArm.x, -1.2, 0.8);
+                eulerArm.y = THREE.MathUtils.clamp(eulerArm.y, -1.0, 1.0);
+                eulerArm.z = THREE.MathUtils.clamp(eulerArm.z, -0.8, 0.8);
+                targetArmQuat.setFromEuler(eulerArm);
+
+                rightArm.quaternion.slerp(targetArmQuat, armTrackingWeight);
+
+                // Straighten elbow (RightForeArm) and wrist (RightHand) to make gun pointing direct
+                if (rightForeArm) {
+                  rightForeArm.quaternion.slerp(new THREE.Quaternion(), armTrackingWeight);
+                }
+                if (rightHand) {
+                  rightHand.quaternion.slerp(new THREE.Quaternion(), armTrackingWeight);
+                }
+
+                // Body rotation (turn back to point gun)
+                const angleToTarget = Math.atan2(target3D.x - model.position.x, target3D.z - model.position.z);
+                const targetModelY = THREE.MathUtils.clamp(angleToTarget, -0.2, 0.8);
+                model.rotation.y = THREE.MathUtils.lerp(0.4, targetModelY, armTrackingWeight);
+
+                if (gunLight) {
+                  gunLight.intensity = THREE.MathUtils.lerp(1.5, 4.0, armTrackingWeight);
+                }
+              } else if (model) {
+                // If not tracking arm (mouse still), return body rotation to idle peek pose
+                model.rotation.y = THREE.MathUtils.lerp(model.rotation.y, 0.4, 0.05);
+                if (gunLight) {
+                  gunLight.intensity = THREE.MathUtils.lerp(gunLight.intensity, 1.5, 0.05);
+                }
               }
             }
-          } else if (model && gunLight) {
-            model.rotation.y = THREE.MathUtils.lerp(model.rotation.y, 0.4, 0.05);
-            gunLight.intensity = THREE.MathUtils.lerp(gunLight.intensity, 1.5, 0.05);
           }
 
           renderer.render(scene, camera);
