@@ -271,39 +271,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const container = document.getElementById('gru-container');
       if (!container) return null;
 
-      container.innerHTML = '';
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      // Show loader message
+      container.innerHTML = `
+        <div class="character-loader" style="
+          color: #0ea5e9;
+          font-family: sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          text-transform: uppercase;
+        ">Loading Character...</div>
+      `;
 
-      const scene = new THREE.Scene();
-      
-      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-      camera.position.set(0, 0.35, 1.6);
-      camera.lookAt(0, 0.25, 0);
-
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
-      renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      container.appendChild(renderer.domElement);
-
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-      scene.add(ambientLight);
-
-      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-      dirLight.position.set(2, 4, 3);
-      dirLight.castShadow = true;
-      dirLight.shadow.mapSize.width = 1024;
-      dirLight.shadow.mapSize.height = 1024;
-      scene.add(dirLight);
-
-      const fillLight = new THREE.DirectionalLight(0x0ea5e9, 0.5);
-      fillLight.position.set(-2, 1, 1);
-      scene.add(fillLight);
-
-      const clock = new THREE.Clock();
-      let mixer = null;
+      let scene, camera, renderer, clock, mixer;
       let model = null;
       let head = null;
       let rightArm = null;
@@ -317,235 +301,292 @@ document.addEventListener('DOMContentLoaded', () => {
       let isTracking = false;
       let trackingWeight = 0;
       let mouseMoveTimeout = null;
+      let animationFrameId = null;
 
       const defaultArmDir = new THREE.Vector3();
       const defaultHeadDir = new THREE.Vector3();
-
       let gunLight = null;
 
-      const loader = new GLTFLoader();
-      loader.load(
-        './character_animated.glb',
-        (gltf) => {
-          model = gltf.scene;
-          scene.add(model);
+      try {
+        const width = container.clientWidth || 280;
+        const height = container.clientHeight || 340;
 
-          model.scale.set(0.65, 0.65, 0.65);
-          model.position.set(0, -0.65, 0);
-          model.rotation.y = 0.4; 
+        scene = new THREE.Scene();
+        
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(0, 0.35, 1.6);
+        camera.lookAt(0, 0.25, 0);
 
-          model.traverse((node) => {
-            if (node.isMesh) {
-              node.castShadow = true;
-              node.receiveShadow = true;
-              if (node.material) {
-                node.material.roughness = 0.5;
-                node.material.metalness = 0.1;
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Force canvas to layout properly inside container
+        renderer.domElement.style.width = '100%';
+        renderer.domElement.style.height = '100%';
+        renderer.domElement.style.display = 'block';
+        container.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(2, 4, 3);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        const fillLight = new THREE.DirectionalLight(0x0ea5e9, 0.5);
+        fillLight.position.set(-2, 1, 1);
+        scene.add(fillLight);
+
+        clock = new THREE.Clock();
+
+        const loader = new GLTFLoader();
+        loader.load(
+          './character_animated.glb',
+          (gltf) => {
+            // Remove loader element
+            const loaderEl = container.querySelector('.character-loader');
+            if (loaderEl) loaderEl.remove();
+
+            model = gltf.scene;
+            scene.add(model);
+
+            model.scale.set(0.65, 0.65, 0.65);
+            model.position.set(0, -0.65, 0);
+            model.rotation.y = 0.4; 
+
+            model.traverse((node) => {
+              if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+                if (node.material) {
+                  node.material.roughness = 0.5;
+                  node.material.metalness = 0.1;
+                }
+              }
+            });
+
+            head = model.getObjectByName('Head');
+            rightArm = model.getObjectByName('RightArm');
+            rightForeArm = model.getObjectByName('RightForeArm');
+            rightHand = model.getObjectByName('RightHand');
+            leftArm = model.getObjectByName('LeftArm');
+            headfront = model.getObjectByName('headfront');
+
+            if (rightHand) {
+              const gunGroup = new THREE.Group();
+              gunGroup.name = 'SciFiWeapon';
+
+              const bodyGeo = new THREE.BoxGeometry(0.06, 0.08, 0.14);
+              const bodyMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.8 });
+              const body = new THREE.Mesh(bodyGeo, bodyMat);
+              body.position.set(0, 0, 0);
+              gunGroup.add(body);
+
+              const barrelGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 12);
+              barrelGeo.rotateX(Math.PI / 2);
+              const barrelMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.9 });
+              const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+              barrel.position.set(0, 0.01, 0.15);
+              gunGroup.add(barrel);
+
+              const energyGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.08, 8);
+              energyGeo.rotateX(Math.PI / 2);
+              const energyMat = new THREE.MeshStandardMaterial({
+                color: 0x00ff00,
+                emissive: 0x10b981,
+                emissiveIntensity: 4.0,
+                roughness: 0.1
+              });
+              const energy = new THREE.Mesh(energyGeo, energyMat);
+              energy.position.set(0, 0.03, 0.04);
+              gunGroup.add(energy);
+
+              const muzzleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.02, 12);
+              muzzleGeo.rotateX(Math.PI / 2);
+              const muzzleMat = new THREE.MeshStandardMaterial({
+                color: 0x10b981,
+                emissive: 0x059669,
+                emissiveIntensity: 3.0
+              });
+              const muzzle = new THREE.Mesh(muzzleGeo, muzzleMat);
+              muzzle.position.set(0, 0.01, 0.26);
+              gunGroup.add(muzzle);
+
+              gunLight = new THREE.PointLight(0x10b981, 2.5, 1.2);
+              gunLight.position.set(0, 0.01, 0.27);
+              gunGroup.add(gunLight);
+
+              gunGroup.position.set(0, 0.02, 0.02);
+              gunGroup.rotation.set(0, 0, 0);
+
+              rightHand.add(gunGroup);
+            }
+
+            // Bone orientation setup with NaN protection
+            if (rightArm && rightForeArm) {
+              defaultArmDir.copy(rightForeArm.position).normalize();
+              if (isNaN(defaultArmDir.x) || isNaN(defaultArmDir.y) || isNaN(defaultArmDir.z) || defaultArmDir.lengthSq() === 0) {
+                defaultArmDir.set(0, -1, 0);
+              }
+            } else {
+              defaultArmDir.set(0, -1, 0);
+            }
+
+            if (head && headfront) {
+              defaultHeadDir.copy(headfront.position).normalize();
+              if (isNaN(defaultHeadDir.x) || isNaN(defaultHeadDir.y) || isNaN(defaultHeadDir.z) || defaultHeadDir.lengthSq() === 0) {
+                defaultHeadDir.set(0, 0, 1);
+              }
+            } else {
+              defaultHeadDir.set(0, 0, 1);
+            }
+
+            if (gltf.animations && gltf.animations.length > 0) {
+              mixer = new THREE.AnimationMixer(model);
+              const agreeClip = gltf.animations.find(clip => clip.name === 'Agree_Gesture') || gltf.animations[0];
+              if (agreeClip) {
+                const action = mixer.clipAction(agreeClip);
+                action.play();
               }
             }
-          });
+          },
+          undefined,
+          (error) => {
+            console.error('Error loading GLTF model:', error);
+            container.innerHTML = '<div style="color: #ef4444; font-family: sans-serif; font-size: 11px; display: flex; align-items: center; justify-content: center; height: 100%;">Character Load Failed</div>';
+          }
+        );
 
-          head = model.getObjectByName('Head');
-          rightArm = model.getObjectByName('RightArm');
-          rightForeArm = model.getObjectByName('RightForeArm');
-          rightHand = model.getObjectByName('RightHand');
-          leftArm = model.getObjectByName('LeftArm');
-          headfront = model.getObjectByName('headfront');
+        function onMouseMove(e) {
+          if (isEntering) return;
 
-          if (rightHand) {
-            const gunGroup = new THREE.Group();
-            gunGroup.name = 'SciFiWeapon';
+          mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+          mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
 
-            const bodyGeo = new THREE.BoxGeometry(0.06, 0.08, 0.14);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.8 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.set(0, 0, 0);
-            gunGroup.add(body);
+          isTracking = true;
 
-            const barrelGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 12);
-            barrelGeo.rotateX(Math.PI / 2);
-            const barrelMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.9 });
-            const barrel = new THREE.Mesh(barrelGeo, barrelMat);
-            barrel.position.set(0, 0.01, 0.15);
-            gunGroup.add(barrel);
+          clearTimeout(mouseMoveTimeout);
+          mouseMoveTimeout = setTimeout(() => {
+            isTracking = false;
+          }, 1500);
+        }
 
-            const energyGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.08, 8);
-            energyGeo.rotateX(Math.PI / 2);
-            const energyMat = new THREE.MeshStandardMaterial({
-              color: 0x00ff00,
-              emissive: 0x10b981,
-              emissiveIntensity: 4.0,
-              roughness: 0.1
-            });
-            const energy = new THREE.Mesh(energyGeo, energyMat);
-            energy.position.set(0, 0.03, 0.04);
-            gunGroup.add(energy);
+        window.addEventListener('mousemove', onMouseMove);
 
-            const muzzleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.02, 12);
-            muzzleGeo.rotateX(Math.PI / 2);
-            const muzzleMat = new THREE.MeshStandardMaterial({
-              color: 0x10b981,
-              emissive: 0x059669,
-              emissiveIntensity: 3.0
-            });
-            const muzzle = new THREE.Mesh(muzzleGeo, muzzleMat);
-            muzzle.position.set(0, 0.01, 0.26);
-            gunGroup.add(muzzle);
+        function animate() {
+          animationFrameId = requestAnimationFrame(animate);
 
-            gunLight = new THREE.PointLight(0x10b981, 2.5, 1.2);
-            gunLight.position.set(0, 0.01, 0.27);
-            gunGroup.add(gunLight);
-
-            gunGroup.position.set(0, 0.02, 0.02);
-            gunGroup.rotation.set(0, 0, 0);
-
-            rightHand.add(gunGroup);
+          const delta = clock.getDelta();
+          
+          if (mixer) {
+            mixer.update(delta);
           }
 
-          if (rightArm && rightForeArm) {
-            defaultArmDir.copy(rightForeArm.position).normalize();
+          if (isTracking && model && head && rightArm) {
+            trackingWeight = THREE.MathUtils.lerp(trackingWeight, 1.0, 0.08);
           } else {
-            defaultArmDir.set(0, -1, 0);
+            trackingWeight = THREE.MathUtils.lerp(trackingWeight, 0.0, 0.04);
           }
 
-          if (head && headfront) {
-            defaultHeadDir.copy(headfront.position).normalize();
-          } else {
-            defaultHeadDir.set(0, 0, 1);
+          if (model && head && rightArm && trackingWeight > 0.005) {
+            const mouse3D = new THREE.Vector3(mouseX, mouseY, 0.5);
+            mouse3D.unproject(camera);
+            const dir = mouse3D.sub(camera.position).normalize();
+            
+            // Division-by-zero check
+            if (Math.abs(dir.z) > 0.0001) {
+              const dist = -camera.position.z / dir.z;
+              const target3D = camera.position.clone().add(dir.multiplyScalar(dist));
+
+              // 1. Head tracking
+              const headWorldPos = new THREE.Vector3();
+              head.getWorldPosition(headWorldPos);
+              const headToTarget = target3D.clone().sub(headWorldPos).normalize();
+              
+              const parentHeadWorldQuat = new THREE.Quaternion();
+              head.parent.getWorldQuaternion(parentHeadWorldQuat);
+              const localHeadDir = headToTarget.clone().applyQuaternion(parentHeadWorldQuat.invert());
+
+              const targetHeadQuat = new THREE.Quaternion().setFromUnitVectors(defaultHeadDir, localHeadDir);
+              
+              const eulerHead = new THREE.Euler().setFromQuaternion(targetHeadQuat, 'YXZ');
+              eulerHead.x = THREE.MathUtils.clamp(eulerHead.x, -0.4, 0.4);
+              eulerHead.y = THREE.MathUtils.clamp(eulerHead.y, -0.6, 0.6);
+              eulerHead.z = 0;
+              targetHeadQuat.setFromEuler(eulerHead);
+
+              head.quaternion.slerp(targetHeadQuat, trackingWeight);
+
+              // 2. Right Arm tracking (pointing gun)
+              const armWorldPos = new THREE.Vector3();
+              rightArm.getWorldPosition(armWorldPos);
+              const armToTarget = target3D.clone().sub(armWorldPos).normalize();
+
+              const parentArmWorldQuat = new THREE.Quaternion();
+              rightArm.parent.getWorldQuaternion(parentArmWorldQuat);
+              const localArmDir = armToTarget.clone().applyQuaternion(parentArmWorldQuat.invert());
+
+              const targetArmQuat = new THREE.Quaternion().setFromUnitVectors(defaultArmDir, localArmDir);
+              
+              const eulerArm = new THREE.Euler().setFromQuaternion(targetArmQuat, 'YXZ');
+              eulerArm.x = THREE.MathUtils.clamp(eulerArm.x, -1.2, 0.8);
+              eulerArm.y = THREE.MathUtils.clamp(eulerArm.y, -1.0, 1.0);
+              eulerArm.z = THREE.MathUtils.clamp(eulerArm.z, -0.8, 0.8);
+              targetArmQuat.setFromEuler(eulerArm);
+
+              rightArm.quaternion.slerp(targetArmQuat, trackingWeight);
+
+              // 3. Body rotation (turn back)
+              const angleToTarget = Math.atan2(target3D.x - model.position.x, target3D.z - model.position.z);
+              const targetModelY = THREE.MathUtils.clamp(angleToTarget, -0.2, 0.8);
+              model.rotation.y = THREE.MathUtils.lerp(0.4, targetModelY, trackingWeight);
+
+              if (gunLight) {
+                gunLight.intensity = THREE.MathUtils.lerp(1.5, 4.0, trackingWeight);
+              }
+            }
+          } else if (model && gunLight) {
+            model.rotation.y = THREE.MathUtils.lerp(model.rotation.y, 0.4, 0.05);
+            gunLight.intensity = THREE.MathUtils.lerp(gunLight.intensity, 1.5, 0.05);
           }
 
-          if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(model);
-            const agreeClip = gltf.animations.find(clip => clip.name === 'Agree_Gesture') || gltf.animations[0];
-            if (agreeClip) {
-              const action = mixer.clipAction(agreeClip);
-              action.play();
+          renderer.render(scene, camera);
+        }
+
+        animate();
+
+        function onResize() {
+          const w = container.clientWidth || 280;
+          const h = container.clientHeight || 340;
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+        window.addEventListener('resize', onResize);
+
+        return function cleanup() {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('resize', onResize);
+          clearTimeout(mouseMoveTimeout);
+          cancelAnimationFrame(animationFrameId);
+          if (renderer) {
+            renderer.dispose();
+            if (renderer.domElement && renderer.domElement.parentNode) {
+              renderer.domElement.parentNode.removeChild(renderer.domElement);
             }
           }
-        },
-        undefined,
-        (error) => {
-          console.error('Error loading rigged 3D character:', error);
-        }
-      );
-
-      function onMouseMove(e) {
-        if (isEntering) return;
-
-        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-
-        isTracking = true;
-
-        clearTimeout(mouseMoveTimeout);
-        mouseMoveTimeout = setTimeout(() => {
-          isTracking = false;
-        }, 1500);
+        };
+      } catch (err) {
+        console.error("Three.js setup error:", err);
+        container.innerHTML = '<div style="color: #ef4444; font-family: sans-serif; font-size: 11px; display: flex; align-items: center; justify-content: center; height: 100%;">3D Canvas Error</div>';
+        return null;
       }
-
-      window.addEventListener('mousemove', onMouseMove);
-
-      let animationFrameId = null;
-
-      function animate() {
-        animationFrameId = requestAnimationFrame(animate);
-
-        const delta = clock.getDelta();
-        
-        if (mixer) {
-          mixer.update(delta);
-        }
-
-        if (isTracking && model && head && rightArm) {
-          trackingWeight = THREE.MathUtils.lerp(trackingWeight, 1.0, 0.08);
-        } else {
-          trackingWeight = THREE.MathUtils.lerp(trackingWeight, 0.0, 0.04);
-        }
-
-        if (model && head && rightArm && trackingWeight > 0.005) {
-          const mouse3D = new THREE.Vector3(mouseX, mouseY, 0.5);
-          mouse3D.unproject(camera);
-          const dir = mouse3D.sub(camera.position).normalize();
-          const dist = -camera.position.z / dir.z;
-          const target3D = camera.position.clone().add(dir.multiplyScalar(dist));
-
-          // 1. Head tracking
-          const headWorldPos = new THREE.Vector3();
-          head.getWorldPosition(headWorldPos);
-          const headToTarget = target3D.clone().sub(headWorldPos).normalize();
-          
-          const parentHeadWorldQuat = new THREE.Quaternion();
-          head.parent.getWorldQuaternion(parentHeadWorldQuat);
-          const localHeadDir = headToTarget.clone().applyQuaternion(parentHeadWorldQuat.invert());
-
-          const targetHeadQuat = new THREE.Quaternion().setFromUnitVectors(defaultHeadDir, localHeadDir);
-          
-          const eulerHead = new THREE.Euler().setFromQuaternion(targetHeadQuat, 'YXZ');
-          eulerHead.x = THREE.MathUtils.clamp(eulerHead.x, -0.4, 0.4);
-          eulerHead.y = THREE.MathUtils.clamp(eulerHead.y, -0.6, 0.6);
-          eulerHead.z = 0;
-          targetHeadQuat.setFromEuler(eulerHead);
-
-          head.quaternion.slerp(targetHeadQuat, trackingWeight);
-
-          // 2. Right Arm tracking (pointing gun)
-          const armWorldPos = new THREE.Vector3();
-          rightArm.getWorldPosition(armWorldPos);
-          const armToTarget = target3D.clone().sub(armWorldPos).normalize();
-
-          const parentArmWorldQuat = new THREE.Quaternion();
-          rightArm.parent.getWorldQuaternion(parentArmWorldQuat);
-          const localArmDir = armToTarget.clone().applyQuaternion(parentArmWorldQuat.invert());
-
-          const targetArmQuat = new THREE.Quaternion().setFromUnitVectors(defaultArmDir, localArmDir);
-          
-          const eulerArm = new THREE.Euler().setFromQuaternion(targetArmQuat, 'YXZ');
-          eulerArm.x = THREE.MathUtils.clamp(eulerArm.x, -1.2, 0.8);
-          eulerArm.y = THREE.MathUtils.clamp(eulerArm.y, -1.0, 1.0);
-          eulerArm.z = THREE.MathUtils.clamp(eulerArm.z, -0.8, 0.8);
-          targetArmQuat.setFromEuler(eulerArm);
-
-          rightArm.quaternion.slerp(targetArmQuat, trackingWeight);
-
-          // 3. Body rotation (turn back)
-          const angleToTarget = Math.atan2(target3D.x - model.position.x, target3D.z - model.position.z);
-          const targetModelY = THREE.MathUtils.clamp(angleToTarget, -0.2, 0.8);
-          model.rotation.y = THREE.MathUtils.lerp(0.4, targetModelY, trackingWeight);
-
-          if (gunLight) {
-            gunLight.intensity = THREE.MathUtils.lerp(1.5, 4.0, trackingWeight);
-          }
-        } else if (model && gunLight) {
-          model.rotation.y = THREE.MathUtils.lerp(model.rotation.y, 0.4, 0.05);
-          gunLight.intensity = THREE.MathUtils.lerp(gunLight.intensity, 1.5, 0.05);
-        }
-
-        renderer.render(scene, camera);
-      }
-
-      animate();
-
-      function onResize() {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      }
-      window.addEventListener('resize', onResize);
-
-      return function cleanup() {
-        window.removeEventListener('mousemove', onMouseMove);
-        window.removeEventListener('resize', onResize);
-        clearTimeout(mouseMoveTimeout);
-        cancelAnimationFrame(animationFrameId);
-        if (renderer) {
-          renderer.dispose();
-          if (renderer.domElement && renderer.domElement.parentNode) {
-            renderer.domElement.parentNode.removeChild(renderer.domElement);
-          }
-        }
-      };
     }
 
     // Initialize 3D character and save the cleanup reference
