@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 /* ==========================================================================
    DEVELOPER PORTFOLIO JAVASCRIPT (ASHVIN JOHNSON)
@@ -345,18 +345,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clock = new THREE.Clock();
 
-        const loader = new GLTFLoader();
+        // Load textures first
+        const textureLoader = new THREE.TextureLoader();
+        const albedoTex = textureLoader.load('./character_albedo.png');
+        const normalTex = textureLoader.load('./character_normal.png');
+        const roughnessTex = textureLoader.load('./character_roughness.png');
+        const metallicTex = textureLoader.load('./character_metallic.png');
+
+        albedoTex.colorSpace = THREE.SRGBColorSpace;
+
+        const loader = new FBXLoader();
         loader.load(
-          './character_animated.glb',
-          (gltf) => {
+          './character.fbx',
+          (fbx) => {
             // Remove loader element
             const loaderEl = container.querySelector('.character-loader');
             if (loaderEl) loaderEl.remove();
 
-            model = gltf.scene;
+            model = fbx;
             scene.add(model);
 
-            model.scale.set(0.65, 0.65, 0.65);
+            // FBX is in centimeters, scale down to match meters (approx 0.0065 world size)
+            model.scale.set(0.0065, 0.0065, 0.0065);
             model.position.set(0, -0.65, 0);
             model.rotation.y = 0.4; 
 
@@ -364,10 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
               if (node.isMesh) {
                 node.castShadow = true;
                 node.receiveShadow = true;
-                if (node.material) {
-                  node.material.roughness = 0.5;
-                  node.material.metalness = 0.1;
-                }
+                
+                // Apply the textures manually
+                node.material = new THREE.MeshStandardMaterial({
+                  map: albedoTex,
+                  normalMap: normalTex,
+                  roughnessMap: roughnessTex,
+                  metalnessMap: metallicTex,
+                  roughness: 0.8,
+                  metalness: 0.2
+                });
               }
             });
 
@@ -422,7 +438,12 @@ document.addEventListener('DOMContentLoaded', () => {
               gunLight.position.set(0, 0.01, 0.27);
               gunGroup.add(gunLight);
 
-              gunGroup.position.set(0, 0.08, 0.02);
+              // Scale the gun back up in the local coordinate space of the hand (which is in centimeters)
+              const gunScale = 1.0 / 0.0065;
+              gunGroup.scale.set(gunScale, gunScale, gunScale);
+              
+              // Shift the gun along the hand bone (centimeters)
+              gunGroup.position.set(0, 8.0, 2.0);
               gunGroup.rotation.set(Math.PI / 2, 0, 0);
 
               rightHand.add(gunGroup);
@@ -447,18 +468,16 @@ document.addEventListener('DOMContentLoaded', () => {
               defaultHeadDir.set(0, 0, 1);
             }
 
-            if (gltf.animations && gltf.animations.length > 0) {
+            // Look for animations inside FBX
+            if (fbx.animations && fbx.animations.length > 0) {
               mixer = new THREE.AnimationMixer(model);
-              const agreeClip = gltf.animations.find(clip => clip.name === 'Agree_Gesture') || gltf.animations[0];
-              if (agreeClip) {
-                const action = mixer.clipAction(agreeClip);
-                action.play();
-              }
+              const action = mixer.clipAction(fbx.animations[0]);
+              action.play();
             }
           },
           undefined,
           (error) => {
-            console.error('Error loading GLTF model:', error);
+            console.error('Error loading FBX model:', error);
             container.innerHTML = '<div style="color: #ef4444; font-family: sans-serif; font-size: 11px; display: flex; align-items: center; justify-content: center; height: 100%;">Character Load Failed</div>';
           }
         );
@@ -486,6 +505,21 @@ document.addEventListener('DOMContentLoaded', () => {
           
           if (mixer) {
             mixer.update(delta);
+          }
+
+          // Procedural breathing animation when idle (no mixer running)
+          if (model && !mixer) {
+            const time = clock.getElapsedTime();
+            const spine = model.getObjectByName('Spine01') || model.getObjectByName('Spine');
+            if (spine && trackingWeight < 0.99) {
+              spine.rotation.x = Math.sin(time * 1.8) * 0.015 * (1 - trackingWeight);
+            }
+            if (leftArm && trackingWeight < 0.99) {
+              leftArm.rotation.z = (Math.sin(time * 1.8) * 0.02 - 0.2) * (1 - trackingWeight);
+            }
+            if (rightArm && trackingWeight < 0.05) {
+              rightArm.rotation.z = (Math.sin(time * 1.8 + Math.PI) * 0.01 - 0.2) * (1 - trackingWeight);
+            }
           }
 
           if (isTracking && model && head && rightArm) {
