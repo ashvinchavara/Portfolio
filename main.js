@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 /* ==========================================================================
    DEVELOPER PORTFOLIO JAVASCRIPT (ASHVIN JOHNSON)
    ========================================================================== */
@@ -189,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('gateway-active');
 
     let isEntering = false;
+    let character3DCleanup = null;
 
     function triggerGatewayEntry() {
       if (isEntering) return;
@@ -199,8 +203,9 @@ document.addEventListener('DOMContentLoaded', () => {
       window.removeEventListener('keydown', handleKeydown);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('mousemove', handleGruMouseMove);
-      clearTimeout(gruStillTimeout);
+      if (character3DCleanup) {
+        character3DCleanup();
+      }
       
       // Trigger CSS transition
       document.body.classList.add('gateway-entering');
@@ -261,79 +266,290 @@ document.addEventListener('DOMContentLoaded', () => {
       scrollPrompt.style.cursor = 'pointer';
     }
 
-    // --- Gru Micro-Interactions (Landing Page Only) ---
-    const gruHead = document.getElementById('gru-head');
-    const gruArm = document.getElementById('gru-arm');
-    const pupilLeft = document.getElementById('gru-pupil-left');
-    const pupilRight = document.getElementById('gru-pupil-right');
-    const headAnchor = document.getElementById('gru-head-anchor');
-    const armAnchor = document.getElementById('gru-arm-anchor');
-    let gruStillTimeout = null;
+    // --- 3D Character (Midnight Enigma Rigged Model) ---
+    function init3DCharacter() {
+      const container = document.getElementById('gru-container');
+      if (!container) return null;
 
-    function handleGruMouseMove(e) {
-      if (isEntering) return;
+      container.innerHTML = '';
+      const width = container.clientWidth;
+      const height = container.clientHeight;
 
-      // 1. Point the freeze ray gun at the cursor
-      let armX = window.innerWidth * 0.05 + 130 * 1.1; // Default fallback position
-      let armY = window.innerHeight - 20 - (250 - 160) * 1.1;
+      const scene = new THREE.Scene();
+      
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      camera.position.set(0, 0.35, 1.6);
+      camera.lookAt(0, 0.25, 0);
 
-      if (armAnchor) {
-        const rect = armAnchor.getBoundingClientRect();
-        if (rect.width > 0 || rect.height > 0) {
-          armX = rect.left;
-          armY = rect.top;
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(2, 4, 3);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      scene.add(dirLight);
+
+      const fillLight = new THREE.DirectionalLight(0x0ea5e9, 0.5);
+      fillLight.position.set(-2, 1, 1);
+      scene.add(fillLight);
+
+      const clock = new THREE.Clock();
+      let mixer = null;
+      let model = null;
+      let head = null;
+      let rightArm = null;
+      let rightForeArm = null;
+      let rightHand = null;
+      let leftArm = null;
+      let headfront = null;
+
+      let mouseX = 0;
+      let mouseY = 0;
+      let isTracking = false;
+      let trackingWeight = 0;
+      let mouseMoveTimeout = null;
+
+      const defaultArmDir = new THREE.Vector3();
+      const defaultHeadDir = new THREE.Vector3();
+
+      let gunLight = null;
+
+      const loader = new GLTFLoader();
+      loader.load(
+        './character_animated.glb',
+        (gltf) => {
+          model = gltf.scene;
+          scene.add(model);
+
+          model.scale.set(0.65, 0.65, 0.65);
+          model.position.set(0, -0.65, 0);
+          model.rotation.y = 0.4; 
+
+          model.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = true;
+              node.receiveShadow = true;
+              if (node.material) {
+                node.material.roughness = 0.5;
+                node.material.metalness = 0.1;
+              }
+            }
+          });
+
+          head = model.getObjectByName('Head');
+          rightArm = model.getObjectByName('RightArm');
+          rightForeArm = model.getObjectByName('RightForeArm');
+          rightHand = model.getObjectByName('RightHand');
+          leftArm = model.getObjectByName('LeftArm');
+          headfront = model.getObjectByName('headfront');
+
+          if (rightHand) {
+            const gunGroup = new THREE.Group();
+            gunGroup.name = 'SciFiWeapon';
+
+            const bodyGeo = new THREE.BoxGeometry(0.06, 0.08, 0.14);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.8 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.set(0, 0, 0);
+            gunGroup.add(body);
+
+            const barrelGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 12);
+            barrelGeo.rotateX(Math.PI / 2);
+            const barrelMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.9 });
+            const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+            barrel.position.set(0, 0.01, 0.15);
+            gunGroup.add(barrel);
+
+            const energyGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.08, 8);
+            energyGeo.rotateX(Math.PI / 2);
+            const energyMat = new THREE.MeshStandardMaterial({
+              color: 0x00ff00,
+              emissive: 0x10b981,
+              emissiveIntensity: 4.0,
+              roughness: 0.1
+            });
+            const energy = new THREE.Mesh(energyGeo, energyMat);
+            energy.position.set(0, 0.03, 0.04);
+            gunGroup.add(energy);
+
+            const muzzleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.02, 12);
+            muzzleGeo.rotateX(Math.PI / 2);
+            const muzzleMat = new THREE.MeshStandardMaterial({
+              color: 0x10b981,
+              emissive: 0x059669,
+              emissiveIntensity: 3.0
+            });
+            const muzzle = new THREE.Mesh(muzzleGeo, muzzleMat);
+            muzzle.position.set(0, 0.01, 0.26);
+            gunGroup.add(muzzle);
+
+            gunLight = new THREE.PointLight(0x10b981, 2.5, 1.2);
+            gunLight.position.set(0, 0.01, 0.27);
+            gunGroup.add(gunLight);
+
+            gunGroup.position.set(0, 0.02, 0.02);
+            gunGroup.rotation.set(0, 0, 0);
+
+            rightHand.add(gunGroup);
+          }
+
+          if (rightArm && rightForeArm) {
+            defaultArmDir.copy(rightForeArm.position).normalize();
+          } else {
+            defaultArmDir.set(0, -1, 0);
+          }
+
+          if (head && headfront) {
+            defaultHeadDir.copy(headfront.position).normalize();
+          } else {
+            defaultHeadDir.set(0, 0, 1);
+          }
+
+          if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            const agreeClip = gltf.animations.find(clip => clip.name === 'Agree_Gesture') || gltf.animations[0];
+            if (agreeClip) {
+              const action = mixer.clipAction(agreeClip);
+              action.play();
+            }
+          }
+        },
+        undefined,
+        (error) => {
+          console.error('Error loading rigged 3D character:', error);
         }
+      );
+
+      function onMouseMove(e) {
+        if (isEntering) return;
+
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        isTracking = true;
+
+        clearTimeout(mouseMoveTimeout);
+        mouseMoveTimeout = setTimeout(() => {
+          isTracking = false;
+        }, 1500);
       }
 
-      const dx = e.clientX - armX;
-      const dy = e.clientY - armY;
-      const distance = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+      window.addEventListener('mousemove', onMouseMove);
 
-      // Calculate angle and rotate arm
-      const angleRad = Math.atan2(dy, dx);
-      const angleDeg = (angleRad * 180) / Math.PI;
-      const rotation = angleDeg + 90; // Add 90 degrees since gun points straight up in SVG
+      let animationFrameId = null;
 
-      if (gruArm) {
-        gruArm.classList.remove('idle-arm');
-        gruArm.style.transform = `rotate(${rotation}deg)`;
+      function animate() {
+        animationFrameId = requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+        
+        if (mixer) {
+          mixer.update(delta);
+        }
+
+        if (isTracking && model && head && rightArm) {
+          trackingWeight = THREE.MathUtils.lerp(trackingWeight, 1.0, 0.08);
+        } else {
+          trackingWeight = THREE.MathUtils.lerp(trackingWeight, 0.0, 0.04);
+        }
+
+        if (model && head && rightArm && trackingWeight > 0.005) {
+          const mouse3D = new THREE.Vector3(mouseX, mouseY, 0.5);
+          mouse3D.unproject(camera);
+          const dir = mouse3D.sub(camera.position).normalize();
+          const dist = -camera.position.z / dir.z;
+          const target3D = camera.position.clone().add(dir.multiplyScalar(dist));
+
+          // 1. Head tracking
+          const headWorldPos = new THREE.Vector3();
+          head.getWorldPosition(headWorldPos);
+          const headToTarget = target3D.clone().sub(headWorldPos).normalize();
+          
+          const parentHeadWorldQuat = new THREE.Quaternion();
+          head.parent.getWorldQuaternion(parentHeadWorldQuat);
+          const localHeadDir = headToTarget.clone().applyQuaternion(parentHeadWorldQuat.invert());
+
+          const targetHeadQuat = new THREE.Quaternion().setFromUnitVectors(defaultHeadDir, localHeadDir);
+          
+          const eulerHead = new THREE.Euler().setFromQuaternion(targetHeadQuat, 'YXZ');
+          eulerHead.x = THREE.MathUtils.clamp(eulerHead.x, -0.4, 0.4);
+          eulerHead.y = THREE.MathUtils.clamp(eulerHead.y, -0.6, 0.6);
+          eulerHead.z = 0;
+          targetHeadQuat.setFromEuler(eulerHead);
+
+          head.quaternion.slerp(targetHeadQuat, trackingWeight);
+
+          // 2. Right Arm tracking (pointing gun)
+          const armWorldPos = new THREE.Vector3();
+          rightArm.getWorldPosition(armWorldPos);
+          const armToTarget = target3D.clone().sub(armWorldPos).normalize();
+
+          const parentArmWorldQuat = new THREE.Quaternion();
+          rightArm.parent.getWorldQuaternion(parentArmWorldQuat);
+          const localArmDir = armToTarget.clone().applyQuaternion(parentArmWorldQuat.invert());
+
+          const targetArmQuat = new THREE.Quaternion().setFromUnitVectors(defaultArmDir, localArmDir);
+          
+          const eulerArm = new THREE.Euler().setFromQuaternion(targetArmQuat, 'YXZ');
+          eulerArm.x = THREE.MathUtils.clamp(eulerArm.x, -1.2, 0.8);
+          eulerArm.y = THREE.MathUtils.clamp(eulerArm.y, -1.0, 1.0);
+          eulerArm.z = THREE.MathUtils.clamp(eulerArm.z, -0.8, 0.8);
+          targetArmQuat.setFromEuler(eulerArm);
+
+          rightArm.quaternion.slerp(targetArmQuat, trackingWeight);
+
+          // 3. Body rotation (turn back)
+          const angleToTarget = Math.atan2(target3D.x - model.position.x, target3D.z - model.position.z);
+          const targetModelY = THREE.MathUtils.clamp(angleToTarget, -0.2, 0.8);
+          model.rotation.y = THREE.MathUtils.lerp(0.4, targetModelY, trackingWeight);
+
+          if (gunLight) {
+            gunLight.intensity = THREE.MathUtils.lerp(1.5, 4.0, trackingWeight);
+          }
+        } else if (model && gunLight) {
+          model.rotation.y = THREE.MathUtils.lerp(model.rotation.y, 0.4, 0.05);
+          gunLight.intensity = THREE.MathUtils.lerp(gunLight.intensity, 1.5, 0.05);
+        }
+
+        renderer.render(scene, camera);
       }
 
-      // 2. Track pupils towards cursor
-      let headX = window.innerWidth * 0.05 + 80 * 1.1; // Default fallback position
-      let headY = window.innerHeight - 20 - (250 - 115) * 1.1;
+      animate();
 
-      if (headAnchor) {
-        const rect = headAnchor.getBoundingClientRect();
-        if (rect.width > 0 || rect.height > 0) {
-          headX = rect.left;
-          headY = rect.top;
-        }
+      function onResize() {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
       }
+      window.addEventListener('resize', onResize);
 
-      const hDx = e.clientX - headX;
-      const hDy = e.clientY - headY;
-      const hDist = Math.max(1, Math.sqrt(hDx * hDx + hDy * hDy));
-
-      // Slide pupils up to 4px in the direction of the cursor
-      const maxPupilShift = 4;
-      const px = (hDx / hDist) * maxPupilShift;
-      const py = (hDy / hDist) * maxPupilShift;
-
-      if (pupilLeft) pupilLeft.style.transform = `translate(${px}px, ${py}px)`;
-      if (pupilRight) pupilRight.style.transform = `translate(${px}px, ${py}px)`;
-
-      // 3. Return to default pose when cursor stops moving
-      clearTimeout(gruStillTimeout);
-      gruStillTimeout = setTimeout(() => {
-        if (gruArm) {
-          gruArm.classList.add('idle-arm');
+      return function cleanup() {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('resize', onResize);
+        clearTimeout(mouseMoveTimeout);
+        cancelAnimationFrame(animationFrameId);
+        if (renderer) {
+          renderer.dispose();
+          if (renderer.domElement && renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
         }
-      }, 1000); // 1 second of inactivity returns arm to vertical pose
+      };
     }
 
-    // Attach Gru mouse tracker
-    window.addEventListener('mousemove', handleGruMouseMove);
+    // Initialize 3D character and save the cleanup reference
+    character3DCleanup = init3DCharacter();
   }
 
 
