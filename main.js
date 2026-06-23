@@ -548,8 +548,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const tHeadYaw = ndx * 0.45;
         const tHeadPitch = ndy * 0.35;
 
-        const tArmYaw = ndx * 0.9;
-        const tArmPitch = -ndy * 1.8; // Much larger pitch so arm can reach overhead
+        // Custom mapping for arm using bilinear interpolation
+        const x_aim = -(1 - ndx) * (1 - ndy) / 4;
+        const y_aim = (1 + ndx + 5 * ndy - 3 * ndx * ndy) / 8;
+
+        const tArmYaw = x_aim * 0.9;
+        const tArmPitch = -y_aim * 1.8; // Much larger pitch so arm can reach overhead
 
         headYaw = THREE.MathUtils.lerp(headYaw, tHeadYaw, 0.06);
         headPitch = THREE.MathUtils.lerp(headPitch, tHeadPitch, 0.06);
@@ -563,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addBoneRot(bNeck, headYaw * 0.4, headPitch * 0.3, armW);
 
         // ARM AIM — larger multipliers so arm reaches fully overhead
-        const ARM_YAW_FIX = -1;
+        const ARM_YAW_FIX = 1;
         const ARM_PITCH_FIX = -1;
         addBoneRot(bLArm,
           armYaw * ARM_YAW_FIX * 0.7,
